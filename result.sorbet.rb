@@ -27,7 +27,7 @@ class Result
   end
   
   sig.returns(Bool)
-  def is_ok
+  def ok?
     @is_ok == 1
   end
   
