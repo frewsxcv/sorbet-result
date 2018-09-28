@@ -1,53 +1,109 @@
 Bool = T.type_alias(T.any(TrueClass, FalseClass))
 
-class Result
+module Result
+  extend T::Helpers
   extend T::Generic
-
+  
   OkType = type_member
   ErrType = type_member
-  
+
   type_parameters(:N, :E)
-    .sig(n: T.type_parameter(:N))
-    .returns(Result[T.type_parameter(:N), T.type_parameter(:E)])
-  def self.ok(n)
-    Result[T.type_parameter(:N), T.type_parameter(:E)].new(true, n)
+    .sig(v: T.type_parameter(:N))
+    .returns(Result::Ok[T.type_parameter(:N), T.type_parameter(:E)])
+  def self.ok(v)
+    Result::Ok[T.type_parameter(:N), T.type_parameter(:E)].new(v)
   end
 
   type_parameters(:N, :E)
-    .sig(n: T.type_parameter(:E))
-    .returns(Result[T.type_parameter(:N), T.type_parameter(:E)])
-  def self.err(n)
-    Result[T.type_parameter(:N), T.type_parameter(:E)].new(true, n)
+    .sig(e: T.type_parameter(:E))
+    .returns(Result::Err[T.type_parameter(:N), T.type_parameter(:E)])
+  def self.err(e)
+    Result::Err[T.type_parameter(:N), T.type_parameter(:E)].new(e)
   end
 
-  sig(is_ok: Bool, val: T.any(OkType, ErrType)).void
-  def initialize(is_ok, val)
-    @is_ok = 1
-    @val = val
-  end
-  
-  sig.returns(Bool)
-  def ok?
-    @is_ok == 1
-  end
-  
-  sig.returns(OkType)
-  def unwrap
-    if @is_ok
+  abstract!
+  sig.abstract.returns(OkType)
+  def unwrap; end
+    
+  abstract!
+  sig.abstract.returns(OkType)
+  def unwrap_err; end
+
+  abstract!
+  sig.abstract.returns(Bool)
+  def ok?; end
+
+  abstract!
+  sig.abstract.returns(Bool)
+  def err?; end
+
+  class Ok
+    include Result
+    extend T::Generic
+    
+    OkType = type_member
+    ErrType = type_member
+    
+    sig(val: OkType).void
+    def initialize(val)
+      @val = val
+    end
+
+    sig.returns(OkType)
+    def unwrap
       @val
-    else
-      raise 'Called unwrap on an Err'
+    end
+  
+    sig.returns(OkType)
+    def unwrap_err
+      raise 'Called unwrap_err on an Ok type'
+    end
+  
+    sig.returns(Bool)
+    def ok?
+      true
+    end
+  
+    sig.returns(Bool)
+    def err?
+      false
     end
   end
 
-  sig.returns(ErrType)
-  def unwrap_err
-    if @is_ok
-      raise 'Called unwrap on an Ok'
-    else  
+  class Err
+    include Result
+    extend T::Generic
+    
+    OkType = type_member
+    ErrType = type_member
+    
+    sig(val: ErrType).void
+    def initialize(val)
+      @val = val
+    end
+
+    sig.returns(OkType)
+    def unwrap
+      raise 'Called unwrap on an Err type'
+    end
+  
+    sig.returns(ErrType)
+    def unwrap_err
       @val
+    end
+  
+    sig.returns(Bool)
+    def ok?
+      false
+    end
+  
+    sig.returns(Bool)
+    def err?
+      true
     end
   end
 end
 
-a = Result.ok(1)
+result = Result.ok(1) # Shortcut for `Result::Ok.new(1)`
+result.ok?
+val = result.unwrap
