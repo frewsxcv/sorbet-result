@@ -26,7 +26,7 @@ class Result
     @val = val
   end
   
-  sig.returns(T.any(TrueClass, FalseClass))
+  sig.returns(Bool)
   def is_ok
     @is_ok == 1
   end
