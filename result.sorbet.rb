@@ -1,7 +1,8 @@
+extend T::Helpers
+
 Bool = T.type_alias(T.any(TrueClass, FalseClass))
 
 module Result
-  extend T::Helpers
   extend T::Generic
   
   OkType = type_member
@@ -101,6 +102,24 @@ module Result
     def err?
       true
     end
+  end
+end
+
+#----------#
+# EXAMPLES #
+#----------#
+
+sig(string: String).returns(Result[Integer, ArgumentError])
+def parse_integer(string)
+  Result::Ok.new(Integer(string))
+rescue ArgumentError => e
+  Result::Err.new(e)
+end
+
+sig(result: Result[String, Exception]).void
+def print_ok_val(result)
+  if result.ok?
+    puts(result.unwrap)
   end
 end
 
