@@ -38,6 +38,13 @@ module Result
   sig.abstract.returns(Bool)
   def err?; end
 
+  abstract!
+  type_parameters(:N1, :N2, :E)
+    .sig(blk: T.proc(arg0: T.type_parameter(:N1)).returns(T.type_parameter(:N2)))
+    .abstract
+    .returns(Result[T.type_parameter(:N2), T.type_parameter(:E)])
+  def map(&blk); end
+
   class Ok
     include Result
     extend T::Generic
@@ -68,6 +75,13 @@ module Result
     sig.returns(Bool)
     def err?
       false
+    end
+
+    type_parameters(:N1, :N2, :E)
+      .sig(blk: T.proc(arg0: T.type_parameter(:N1)).returns(T.type_parameter(:N2)))
+      .returns(Result[T.type_parameter(:N2), T.type_parameter(:E)])
+    def map(&blk)
+      Result::Ok.new(blk.call(@val))
     end
   end
 
@@ -102,6 +116,13 @@ module Result
     def err?
       true
     end
+    
+    type_parameters(:N1, :N2, :E)
+      .sig(blk: T.proc(arg0: T.type_parameter(:N1)).returns(T.type_parameter(:N2)))
+      .returns(Result[T.type_parameter(:N2), T.type_parameter(:E)])
+    def map(&blk)
+      Result::Err.new(@val)
+    end
   end
 end
 
@@ -114,6 +135,10 @@ def parse_integer(string)
   Result::Ok.new(Integer(string))
 rescue ArgumentError => e
   Result::Err.new(e)
+# This compiles, but it shouldn't:
+#
+# rescue Exception => e
+#   Result::Err.new(e)
 end
 
 sig(result: Result[String, Exception]).void
@@ -123,6 +148,8 @@ def print_ok_val(result)
   end
 end
 
-result = Result.ok(1) # Shortcut for `Result::Ok.new(1)`
-result.ok?
-val = result.unwrap
+# result = Result.ok(1) # Shortcut for `Result::Ok.new(1)`
+# print_ok_val(result.map(&:to_s))
+
+# result = parse_integer("hi")
+# print_ok_val(result.map(&:to_s))
