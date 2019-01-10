@@ -1,5 +1,3 @@
-extend T::Helpers
-
 Bool = T.type_alias(T.any(TrueClass, FalseClass))
 
 module Result
@@ -7,42 +5,57 @@ module Result
   
   OkType = type_member
   ErrType = type_member
-
-  type_parameters(:N, :E)
-    .sig(v: T.type_parameter(:N))
-    .returns(Result::Ok[T.type_parameter(:N), T.type_parameter(:E)])
+  
+  sig do
+    type_parameters(:N, :E)
+      .params(v: T.type_parameter(:N))
+      .returns(
+        Result::Ok[T.type_parameter(:N), T.type_parameter(:E)]
+      )
+  end
   def self.ok(v)
-    Result::Ok[T.type_parameter(:N), T.type_parameter(:E)].new(v)
+    Result::Ok.new(v)
   end
 
-  type_parameters(:N, :E)
-    .sig(e: T.type_parameter(:E))
-    .returns(Result::Err[T.type_parameter(:N), T.type_parameter(:E)])
+  sig do
+    type_parameters(:N, :E)
+      .params(e: T.type_parameter(:E))
+      .returns(
+        Result::Err[T.type_parameter(:N), T.type_parameter(:E)]
+      )
+  end
   def self.err(e)
-    Result::Err[T.type_parameter(:N), T.type_parameter(:E)].new(e)
+    Result::Err.new(e)
   end
 
   abstract!
-  sig.abstract.returns(OkType)
+  sig { abstract.returns(OkType) }
   def unwrap; end
     
   abstract!
-  sig.abstract.returns(OkType)
+  sig { abstract.returns(OkType) }
   def unwrap_err; end
 
   abstract!
-  sig.abstract.returns(Bool)
+  sig { abstract.returns(Bool) }
   def ok?; end
 
   abstract!
-  sig.abstract.returns(Bool)
+  sig { abstract.returns(Bool) }
   def err?; end
 
   abstract!
-  type_parameters(:N1, :N2, :E)
-    .sig(blk: T.proc(arg0: T.type_parameter(:N1)).returns(T.type_parameter(:N2)))
-    .abstract
-    .returns(Result[T.type_parameter(:N2), T.type_parameter(:E)])
+  sig do
+    type_parameters(:N1, :N2, :E)
+      .params(
+        blk: T.proc.params(arg0: T.type_parameter(:N1))
+          .returns(T.type_parameter(:N2))
+      )
+      .abstract
+      .returns(
+        Result[T.type_parameter(:N2), T.type_parameter(:E)]
+      )
+  end
   def map(&blk); end
 
   class Ok
@@ -52,36 +65,41 @@ module Result
     OkType = type_member
     ErrType = type_member
     
-    sig(val: OkType).void
+    sig { params(val: OkType).void }
     def initialize(val)
       @val = val
     end
 
-    sig.returns(OkType)
+    sig{returns(OkType)}
     def unwrap
       @val
     end
   
-    sig.returns(OkType)
+    sig { returns(OkType) }
     def unwrap_err
       raise 'Called unwrap_err on an Ok type'
     end
   
-    sig.returns(Bool)
+    sig { returns(Bool) }
     def ok?
       true
     end
   
-    sig.returns(Bool)
+    sig { returns(Bool) }
     def err?
       false
     end
 
-    type_parameters(:N1, :N2, :E)
-      .sig(blk: T.proc(arg0: T.type_parameter(:N1)).returns(T.type_parameter(:N2)))
-      .returns(Result[T.type_parameter(:N2), T.type_parameter(:E)])
+    sig do
+      type_parameters(:N1, :N2, :E)
+        .params(
+          blk: T.proc.params(arg0: T.type_parameter(:N1))
+            .returns(T.type_parameter(:N2))
+        )
+        .returns(Result[T.type_parameter(:N2), T.type_parameter(:E)])
+    end
     def map(&blk)
-      Result::Ok.new(blk.call(@val))
+      self.class.new(blk.call(@val))
     end
   end
 
@@ -92,36 +110,38 @@ module Result
     OkType = type_member
     ErrType = type_member
     
-    sig(val: ErrType).void
+    sig{params(val: ErrType).void}
     def initialize(val)
       @val = val
     end
 
-    sig.returns(OkType)
+    sig{returns(OkType)}
     def unwrap
       raise 'Called unwrap on an Err type'
     end
   
-    sig.returns(ErrType)
+    sig{returns(ErrType)}
     def unwrap_err
       @val
     end
   
-    sig.returns(Bool)
+    sig{returns(Bool)}
     def ok?
       false
     end
   
-    sig.returns(Bool)
+    sig{returns(Bool)}
     def err?
       true
     end
     
-    type_parameters(:N1, :N2, :E)
-      .sig(blk: T.proc(arg0: T.type_parameter(:N1)).returns(T.type_parameter(:N2)))
-      .returns(Result[T.type_parameter(:N2), T.type_parameter(:E)])
+    sig do
+      type_parameters(:N1, :N2, :E)
+        .params(blk: T.proc.params(arg0: T.type_parameter(:N1)).returns(T.type_parameter(:N2)))
+        .returns(Result[T.type_parameter(:N2), T.type_parameter(:E)])
+    end
     def map(&blk)
-      Result::Err.new(@val)
+      self.class.new(@val)
     end
   end
 end
@@ -130,7 +150,11 @@ end
 # EXAMPLES #
 #----------#
 
-sig(string: String).returns(Result[Integer, ArgumentError])
+extend T::Sig
+
+sig do
+  params(string: String).returns(Result[Integer, ArgumentError])
+end
 def parse_integer(string)
   Result::Ok.new(Integer(string))
 rescue ArgumentError => e
@@ -141,7 +165,7 @@ rescue ArgumentError => e
 #   Result::Err.new(e)
 end
 
-sig(result: Result[String, Exception]).void
+sig{params(result: Result[String, Exception]).void}
 def print_ok_val(result)
   if result.ok?
     puts(result.unwrap)
