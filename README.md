@@ -5,14 +5,14 @@ A result type for Sorbet. API is similar to [Rust’s `Result`](https://doc.rust
 ## Examples
 
 ```ruby
-sig(string: String).returns(Result[Integer, ArgumentError])
+sig { params(string: String).returns(Result[Integer, ArgumentError]) }
 def parse_integer(string)
   Result.ok(Integer(string))
 rescue ArgumentError => e
   Result.err(e)
 end
 
-sig(result: Result[String, Exception]).void
+sig { params(result: Result[String, Exception]).void }
 def print_ok_val(result)
   if result.ok?
     puts(result.unwrap)
