@@ -153,7 +153,7 @@ end
 extend T::Sig
 
 sig do
-  params(string: String).returns(Result[Integer, ArgumentError])
+  params(string: String).returns(Result[Integer, T.untyped])
 end
 def parse_integer(string)
   Result::Ok.new(Integer(string))
@@ -165,15 +165,15 @@ rescue ArgumentError => e
 #   Result::Err.new(e)
 end
 
-sig{params(result: Result[String, Exception]).void}
+sig{params(result: Result[String, T.untyped]).void}
 def print_ok_val(result)
   if result.ok?
     puts(result.unwrap)
   end
 end
 
-# result = Result.ok(1) # Shortcut for `Result::Ok.new(1)`
-# print_ok_val(result.map(&:to_s))
+result = Result.ok(1) # Shortcut for `Result::Ok.new(1)`
+print_ok_val(result.map(&:to_s))
 
-# result = parse_integer("hi")
-# print_ok_val(result.map(&:to_s))
+result = parse_integer("hi")
+print_ok_val(result.map(&:to_s))
