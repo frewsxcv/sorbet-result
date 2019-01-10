@@ -12,7 +12,7 @@ rescue ArgumentError => e
   Result.err(e)
 end
 
-sig { params(result: Result[String, Exception]).void }
+sig { params(result: Result[String, T.untyped]).void }
 def print_ok_val(result)
   if result.ok?
     puts(result.unwrap)
