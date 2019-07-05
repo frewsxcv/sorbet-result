@@ -1,7 +1,8 @@
-Bool = T.type_alias(T.any(TrueClass, FalseClass))
+# typed: strict
 
 module Result
   extend T::Generic
+  extend T::Sig
   
   OkType = type_member
   ErrType = type_member
@@ -37,11 +38,11 @@ module Result
   def unwrap_err; end
 
   abstract!
-  sig { abstract.returns(Bool) }
+  sig { abstract.returns(T::Boolean) }
   def ok?; end
 
   abstract!
-  sig { abstract.returns(Bool) }
+  sig { abstract.returns(T::Boolean) }
   def err?; end
 
   abstract!
@@ -61,13 +62,14 @@ module Result
   class Ok
     include Result
     extend T::Generic
+    extend T::Sig
     
     OkType = type_member
     ErrType = type_member
     
     sig { params(val: OkType).void }
     def initialize(val)
-      @val = val
+      @val = T.let(val, OkType)
     end
 
     sig{returns(OkType)}
@@ -80,23 +82,23 @@ module Result
       raise 'Called unwrap_err on an Ok type'
     end
   
-    sig { returns(Bool) }
+    sig { returns(T::Boolean) }
     def ok?
       true
     end
   
-    sig { returns(Bool) }
+    sig { returns(T::Boolean) }
     def err?
       false
     end
 
     sig do
-      type_parameters(:N1, :N2, :E)
+      type_parameters(:O, :E)
         .params(
-          blk: T.proc.params(arg0: T.type_parameter(:N1))
-            .returns(T.type_parameter(:N2))
+          blk: T.proc.params(arg0: OkType)
+            .returns(T.type_parameter(:O))
         )
-        .returns(Result[T.type_parameter(:N2), T.type_parameter(:E)])
+        .returns(Result[T.type_parameter(:O), T.type_parameter(:E)])
     end
     def map(&blk)
       self.class.new(blk.call(@val))
@@ -106,13 +108,14 @@ module Result
   class Err
     include Result
     extend T::Generic
+    extend T::Sig
     
     OkType = type_member
     ErrType = type_member
     
     sig{params(val: ErrType).void}
     def initialize(val)
-      @val = val
+      @val = T.let(val, ErrType)
     end
 
     sig{returns(OkType)}
@@ -125,12 +128,12 @@ module Result
       @val
     end
   
-    sig{returns(Bool)}
+    sig{returns(T::Boolean)}
     def ok?
       false
     end
   
-    sig{returns(Bool)}
+    sig{returns(T::Boolean)}
     def err?
       true
     end
@@ -159,10 +162,10 @@ def parse_integer(string)
   Result::Ok.new(Integer(string))
 rescue ArgumentError => e
   Result::Err.new(e)
-# This compiles, but it shouldn't:
-#
-# rescue Exception => e
-#   Result::Err.new(e)
+  # This compiles, but it shouldn't:
+  #
+  # rescue Exception => e
+  #   Result::Err.new(e)
 end
 
 sig{params(result: Result[String, T.untyped]).void}
