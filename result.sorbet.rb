@@ -72,28 +72,29 @@ module Result
       @val = T.let(val, OkType)
     end
 
-    sig{returns(OkType)}
+    sig{ override.returns(OkType) }
     def unwrap
       @val
     end
   
-    sig { returns(OkType) }
+    sig { override.returns(OkType) }
     def unwrap_err
       raise 'Called unwrap_err on an Ok type'
     end
   
-    sig { returns(T::Boolean) }
+    sig { override.returns(T::Boolean) }
     def ok?
       true
     end
   
-    sig { returns(T::Boolean) }
+    sig { override.returns(T::Boolean) }
     def err?
       false
     end
 
     sig do
       type_parameters(:O, :E)
+        .override
         .params(
           blk: T.proc.params(arg0: OkType)
             .returns(T.type_parameter(:O))
@@ -118,28 +119,29 @@ module Result
       @val = T.let(val, ErrType)
     end
 
-    sig{returns(OkType)}
+    sig{ override.returns(OkType) }
     def unwrap
       raise 'Called unwrap on an Err type'
     end
   
-    sig{returns(ErrType)}
+    sig{ override.returns(ErrType) }
     def unwrap_err
       @val
     end
   
-    sig{returns(T::Boolean)}
+    sig{ override.returns(T::Boolean) }
     def ok?
       false
     end
   
-    sig{returns(T::Boolean)}
+    sig{ override.returns(T::Boolean) }
     def err?
       true
     end
     
     sig do
       type_parameters(:N1, :N2, :E)
+        .override
         .params(blk: T.proc.params(arg0: T.type_parameter(:N1)).returns(T.type_parameter(:N2)))
         .returns(Result[T.type_parameter(:N2), T.type_parameter(:E)])
     end
@@ -160,12 +162,8 @@ sig do
 end
 def parse_integer(string)
   Result::Ok.new(Integer(string))
-rescue ArgumentError => e
+rescue Exception => e
   Result::Err.new(e)
-  # This compiles, but it shouldn't:
-  #
-  # rescue Exception => e
-  #   Result::Err.new(e)
 end
 
 sig{params(result: Result[String, T.untyped]).void}
