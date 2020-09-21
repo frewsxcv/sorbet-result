@@ -162,8 +162,12 @@ sig do
 end
 def parse_integer(string)
   Result::Ok.new(Integer(string))
-rescue Exception => e
+rescue ArgumentError => e
   Result::Err.new(e)
+  # This compiles, but it shouldn't:
+  #
+  # rescue Exception => e
+  #   Result::Err.new(e)
 end
 
 sig{params(result: Result[String, T.untyped]).void}
